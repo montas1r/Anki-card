@@ -10,7 +10,8 @@ const AppEngine = {
     currentSessionIndex: 0,
     isCardFlipped: false,
     editingDeckId: null,
-    editingCardId: null
+    editingCardId: null,
+    currentLayoutMode: 'blocks' // Default initialization layout mode state
   },
 
   init: async function() {
@@ -40,6 +41,23 @@ const AppEngine = {
       if (window.api) this.state.cards = await api.getCards(this.state.activeDeckId);
       this.renderCardsView();
     } catch (e) { console.error("Card sync error", e); }
+  },
+
+  // Layout Mode Shift Control Layer Engine
+  changeLayoutMode: function(modeName, tabElement) {
+    this.state.currentLayoutMode = modeName;
+    
+    // Toggle active state visualization tabs
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+    if (tabElement) tabElement.classList.add('active');
+
+    // Mutate container grid styling profile class
+    const grid = document.getElementById('decks-grid');
+    if (grid) {
+      grid.className = 'flat-grid';
+      grid.classList.add(`dynamic-layout-${modeName}`);
+    }
+    this.renderDecksView();
   },
 
   // ---- CRUD CONTROL OPERATIONS ----
@@ -74,35 +92,15 @@ const AppEngine = {
     document.getElementById('deck-modal').classList.remove('hidden');
   },
 
-  commitCard: async function() {
-    const frontInp = document.getElementById('input-card-front');
-    const backInp = document.getElementById('input-card-back');
-    if (!frontInp || !backInp) return;
-
-    const front = frontInp.value.trim();
-    const back = backInp.value.trim();
-    if (!front || !back) return alert('Fields cannot be empty');
-
-    if (this.state.editingCardId) {
-      await api.updateCard(this.state.editingCardId, { front, back });
-      this.state.editingCardId = null;
-    } else {
-      await api.createCard(this.state.activeDeckId, { front, back });
-    }
-    this.closeCardModal();
-    await this.syncCardsFromStorage();
-  },
-
-  openEditCardModal: function(id, front, back) {
-    this.state.editingCardId = id;
-    document.getElementById('input-card-front').value = front;
-    document.getElementById('input-card-back').value = back;
-    document.getElementById('card-modal').classList.remove('hidden');
-  },
-
   openDeckWorkspace: function(deckId, targetTitle) {
     this.state.activeDeckId = deckId;
     document.getElementById('active-deck-title').textContent = targetTitle;
+    
+    // Clear old bulk load terminal area variables
+    const bulkField = document.getElementById('bulk-paste-area');
+    if (bulkField) bulkField.value = '';
+    this.calculateBulkCards();
+
     this.switchView('cards');
     this.syncCardsFromStorage();
   },
@@ -129,11 +127,86 @@ const AppEngine = {
     document.getElementById('deck-modal').classList.add('hidden');
   },
 
+  // ---- CARD MODAL MULTI-MODE LAYER CONTROL ----
+  setCardModalMode: function(mode) {
+    const tabSingle = document.getElementById('tab-mode-single');
+    const tabBulk = document.getElementById('tab-mode-bulk');
+    const formSingle = document.getElementById('modal-form-single');
+    const formBulk = document.getElementById('modal-form-bulk');
+    const submitBtn = document.getElementById('modal-card-submit-btn');
+    const headline = document.getElementById('modal-card-headline');
+
+    if (mode === 'bulk') {
+      if (tabSingle) tabSingle.classList.remove('active');
+      if (tabBulk) tabBulk.classList.add('active');
+      if (formSingle) formSingle.classList.add('hidden');
+      if (formBulk) formBulk.classList.remove('hidden');
+      if (submitBtn) submitBtn.textContent = 'Commit Bulk Load';
+      if (headline) headline.textContent = 'Bulk Load Matrix';
+    } else {
+      if (tabBulk) tabBulk.classList.remove('active');
+      if (tabSingle) tabSingle.classList.add('active');
+      if (formBulk) formBulk.classList.add('hidden');
+      if (formSingle) formSingle.classList.remove('hidden');
+      if (submitBtn) submitBtn.textContent = this.state.editingCardId ? 'Save Changes' : 'Save Card';
+      if (headline) headline.textContent = this.state.editingCardId ? 'Edit Flashcard' : 'Append Flashcard';
+    }
+  },
+
   closeCardModal: function() {
     this.state.editingCardId = null;
     document.getElementById('input-card-front').value = '';
     document.getElementById('input-card-back').value = '';
+    document.getElementById('bulk-paste-area').value = '';
+    this.calculateBulkCards();
+    
+    // Reset window selection profiles seamlessly
+    this.setCardModalMode('single');
+    const tabs = document.getElementById('modal-mode-tabs');
+    if (tabs) tabs.classList.remove('hidden');
+
     document.getElementById('card-modal').classList.add('hidden');
+  },
+
+  openEditCardModal: function(id, front, back) {
+    this.state.editingCardId = id;
+    document.getElementById('input-card-front').value = front;
+    document.getElementById('input-card-back').value = back;
+    
+    // Lock choice matrix while updating a explicit card item
+    const tabs = document.getElementById('modal-mode-tabs');
+    if (tabs) tabs.classList.add('hidden');
+    
+    this.setCardModalMode('single');
+    document.getElementById('card-modal').classList.remove('hidden');
+  },
+
+  commitCardWindowData: function() {
+    const tabBulk = document.getElementById('tab-mode-bulk');
+    if (tabBulk && tabBulk.classList.contains('active')) {
+      this.processBulkPaste();
+    } else {
+      this.commitCard();
+    }
+  },
+
+  commitCard: async function() {
+    const frontInp = document.getElementById('input-card-front');
+    const backInp = document.getElementById('input-card-back');
+    if (!frontInp || !backInp) return;
+
+    const front = frontInp.value.trim();
+    const back = backInp.value.trim();
+    if (!front || !back) return alert('Fields cannot be empty');
+
+    if (this.state.editingCardId) {
+      await api.updateCard(this.state.editingCardId, { front, back });
+      this.state.editingCardId = null;
+    } else {
+      await api.createCard(this.state.activeDeckId, { front, back });
+    }
+    this.closeCardModal();
+    await this.syncCardsFromStorage();
   },
 
   // ---- WORKSPACE RENDER LAYERS ----
@@ -144,22 +217,10 @@ const AppEngine = {
       container.innerHTML = `<p style="grid-column:1/-1; text-align:center; padding:20px; opacity:0.5;">No active decks found.</p>`;
       return;
     }
+
+    const mode = this.state.currentLayoutMode || 'blocks';
     container.innerHTML = this.state.decks.map(d => {
-      const escape = (str) => (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-      return `
-        <div class="deck-card" onclick="AppEngine.openDeckWorkspace(${d.id}, '${escape(d.name)}')">
-          <h4 style="font-weight:600; margin-bottom:4px;">${d.name}</h4>
-          <p style="font-size:12px; opacity:0.7; min-height:32px;">${d.description || 'No directives.'}</p>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; font-size:11px;">
-            <span style="color:var(--primary-teal); font-weight:600;">Due: ${d.due_cards ?? 0}</span>
-            <div style="display:flex; gap:4px; align-items:center;">
-              <button class="icon-btn ghost" style="width:26px; height:26px; border:1px solid rgba(66,132,117,0.3);" title="Edit Deck" onclick="AppEngine.openEditDeckModal(${d.id}, '${escape(d.name)}', '${escape(d.description)}', event)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px; height:13px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>
-              </button>
-              <button class="btn danger" style="padding:2px 6px; font-size:11px;" onclick="AppEngine.removeDeck(${d.id}, event)">Delete</button>
-            </div>
-          </div>
-        </div>`;
+      return DeckRenderModes[mode](d, DeckRenderModes.escape);
     }).join('');
   },
 
@@ -182,23 +243,22 @@ const AppEngine = {
             <button class="icon-btn ghost" style="width:28px; height:28px; border:1px solid rgba(66,132,117,0.3);" title="Edit Card" onclick="AppEngine.openEditCardModal(${c.id}, '${escape(c.front)}', '${escape(c.back)}')">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px; height:13px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>
             </button>
-            <button class="btn flat-action" style="color:var(--error-crimson); padding:0 4px;" onclick="AppEngine.removeCard(${c.id})">✕</button>
+            <button class="icon-btn danger-icon" style="width:28px; height:28px;" title="Delete Card" onclick="AppEngine.removeCard(${c.id})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px; height:13px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
           </div>
         </div>`;
     }).join('');
   },
 
-// ---- SEARCH ENGINE TRANSITIONS ----
+  // ---- UTILITY SEARCH MODULE OVERLAYS ----
   toggleSearchPanel: function() {
-    const importRack = document.getElementById('import-utility-rack');
-    if (importRack) importRack.classList.add('hidden');
-    
-    const searchRack = document.getElementById('search-utility-rack');
+    const rack = document.getElementById('search-utility-rack');
     const triggerBtn = document.getElementById('search-nav-btn');
-    if (!searchRack) return;
+    if (!rack) return;
 
-    searchRack.classList.toggle('hidden');
-    if (!searchRack.classList.contains('hidden')) {
+    rack.classList.toggle('hidden');
+    if (!rack.classList.contains('hidden')) {
       if (triggerBtn) triggerBtn.style.visibility = 'hidden';
       const input = document.getElementById('navbar-search-input');
       if (input) {
@@ -211,57 +271,63 @@ const AppEngine = {
     }
   },
 
-  toggleImportPanel: function() {
-    const searchRack = document.getElementById('search-utility-rack');
-    const triggerBtn = document.getElementById('search-nav-btn');
-    if (searchRack) {
-      searchRack.classList.add('hidden');
-      if (triggerBtn) triggerBtn.style.visibility = 'visible';
-    }
-    
-    const importRack = document.getElementById('import-utility-rack');
-    if (importRack) importRack.classList.toggle('hidden');
-  },
-
-  // 2. Multi-Target Comprehensive Search (Decks + Cards Deep Lookup)
   executeWorkspaceSearch: function() {
     const input = document.getElementById('navbar-search-input');
     if (!input) return;
     const query = input.value.toLowerCase().trim();
     
-    // Filter Card Rows inside the workspace view
-    document.querySelectorAll('.card-row').forEach(row => {
-      // Searches both the prompt faces and target metadata answers seamlessly
-      const textContent = row.textContent.toLowerCase();
-      row.style.display = textContent.includes(query) ? 'flex' : 'none';
-    });
-
-    // Filter Repositories Grid View elements
-    document.querySelectorAll('.deck-card').forEach(card => {
-      const textContent = card.textContent.toLowerCase();
-      card.style.display = textContent.includes(query) ? 'block' : 'none';
-    });
+    document.querySelectorAll('.card-row').forEach(r => r.style.display = r.textContent.toLowerCase().includes(query) ? 'flex' : 'none');
+    document.querySelectorAll('.deck-card').forEach(c => c.style.display = c.textContent.toLowerCase().includes(query) ? 'block' : 'none');
   },
 
-  executeJSONImport: function() {
-    const field = document.getElementById('import-file-field');
-    if (!field.files.length) return alert('Select file context');
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const parsed = JSON.parse(e.target.result);
-        const items = Array.isArray(parsed) ? parsed : [parsed];
-        for (const item of items) {
-          if (item.front && item.back) await api.createCard(this.state.activeDeckId, item);
-        }
-        await this.syncCardsFromStorage();
-        this.toggleImportPanel();
-      } catch (err) { alert('Import processing failed.'); }
-    };
-    reader.readAsText(field.files[0]);
+  // Real-time Count Processing Functionality Module
+  getParsedBulkItems: function() {
+    const rawText = document.getElementById('bulk-paste-area').value;
+    if (!rawText.trim()) return [];
+    
+    const lines = rawText.split('\n');
+    const validPairs = [];
+
+    lines.forEach(line => {
+      if (!line.trim()) return;
+      const separatorIndex = line.indexOf(',');
+      if (separatorIndex === -1) return;
+
+      const front = line.substring(0, separatorIndex).trim();
+      const back = line.substring(separatorIndex + 1).trim();
+      
+      if (front && back) {
+        validPairs.push({ front, back });
+      }
+    });
+    return validPairs;
   },
 
-  // ---- REVIEW LOGIC TUNING MODULE ----
+  calculateBulkCards: function() {
+    const validItems = this.getParsedBulkItems();
+    const label = document.getElementById('bulk-counter-badge');
+    if (label) {
+      label.textContent = `${validItems.length} cards detected`;
+    }
+  },
+
+  processBulkPaste: async function() {
+    if (!this.state.activeDeckId) return alert('Select repository target workspace context');
+    const items = this.getParsedBulkItems();
+    
+    if (!items.length) {
+      return alert('No verified items found matching structural requirements: Front,Back');
+    }
+
+    for (const item of items) {
+      await api.createCard(this.state.activeDeckId, item);
+    }
+
+    this.closeCardModal();
+    await this.syncCardsFromStorage();
+  },
+
+  // ---- REVIEW SYSTEM ENGINE ----
   startStudySession: async function() {
     this.state.studyQueue = await api.getDueCards(this.state.activeDeckId);
     this.state.currentSessionIndex = 0;
