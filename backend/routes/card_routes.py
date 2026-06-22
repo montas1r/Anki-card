@@ -42,6 +42,7 @@ def update_card(card_id):
     
     db.session.commit()
     return jsonify(card.to_dict())
+
 @card_bp.route("/<int:card_id>/review", methods=["POST"])
 def review_card(card_id):
     card = Card.query.get_or_404(card_id)

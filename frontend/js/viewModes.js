@@ -1,75 +1,96 @@
 /**
  * Deck Render Strategies for Multiple View Profiles - Icon Variant
  */
+/**
+ * Deck Render Strategies for Multiple View Profiles - Icon Variant
+ */
 const DeckRenderModes = {
   escape: (str) => (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;'),
 
-  blocks: function(d, escape) {
+  blocks: function(d, esc) {
+    // FIXED: Properly handle the empty payload checking before injecting the string snippet
+    const descriptionHTML = d.description 
+      ? `<p class="deck-desc-text">${d.description}</p>` 
+      : `<p class="deck-desc-text empty-payload" style="display: none;"></p>`;
+
     return `
-      <div class="deck-card mode-blocks" onclick="AppEngine.openDeckWorkspace(${d.id}, '${escape(d.name)}')">
-        <h4>${d.name}</h4>
-        <p>${d.description || 'No directives.'}</p>
-        <div class="deck-meta-row">
-          <span class="due-pill">Due: ${d.due_cards ?? 0}</span>
-          ${this.renderActions(d, escape)}
+      <div class="flat-card mode-block-item" onclick="AppEngine.openDeckWorkspace(${d.id}, '${esc(d.name)}')">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%;">
+          <div style="flex: 1;">
+            <h3 style="margin: 0 0 4px 0; font-size: 16px;">${d.name}</h3>
+            ${descriptionHTML}
+          </div>
+          <div class="repo-inline-controls" onclick="event.stopPropagation();">
+            <button class="icon-btn ghost" title="Instant Blitz Run" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', true)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px; fill:currentColor;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            </button>
+            <button class="icon-btn ghost" title="Study Due" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', false)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px; height:14px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            </button>
+            <button class="icon-btn ghost" title="Modify Context" onclick="AppEngine.openEditDeckModal(${d.id}, '${esc(d.name)}', '${esc(d.description)}', event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4Z"></path></svg>
+            </button>
+            <button class="icon-btn danger-icon" title="Drop Deck" onclick="AppEngine.removeDeck(${d.id}, event)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
         </div>
       </div>`;
   },
 
-  tiles: function(d, escape) {
+  tiles: function(d, esc) {
+    // FIXED: Dropped placeholder fallback string to prevent search bar interference
+    const displayDesc = d.description ? esc(d.description) : '';
     return `
-      <div class="deck-card mode-tiles" onclick="AppEngine.openDeckWorkspace(${d.id}, '${escape(d.name)}')">
-        <div class="tile-content">
-          <h4>${d.name}</h4>
-          <p>${d.description || ''}</p>
+      <div class="flat-card mode-tile-item" onclick="AppEngine.openDeckWorkspace(${d.id}, '${esc(d.name)}')">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <h4 style="margin:0; font-size:14px; font-weight:700;">${d.name}</h4>
+          <div class="repo-inline-controls" onclick="event.stopPropagation();" style="gap:2px;">
+            <button class="icon-btn ghost" style="width:22px; height:22px;" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px; height:11px; fill:currentColor;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></button>
+            <button class="icon-btn ghost" style="width:22px; height:22px;" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:11px; height:11px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
+          </div>
         </div>
-        <div class="deck-meta-row">
-          <span class="due-pill">Due: ${d.due_cards ?? 0}</span>
-          ${this.renderActions(d, escape)}
+        <p style="font-size:11px; margin:0; opacity:0.8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${displayDesc}</p>
+      </div>`;
+  },
+
+  list: function(d, esc) {
+    return `
+      <div class="flat-card mode-list-item" style="display:flex; align-items:center; justify-content:between; width:100%; padding:12px 16px;" onclick="AppEngine.openDeckWorkspace(${d.id}, '${esc(d.name)}')">
+        <div style="flex:1;">
+          <strong style="font-size:14px; color:var(--bg-dark);">${d.name}</strong>
+          <span style="font-size:12px; margin-left:12px; color:var(--primary-teal); opacity:0.8;">${d.description ? esc(d.description) : ''}</span>
+        </div>
+        <div class="repo-inline-controls" onclick="event.stopPropagation();">
+          <button class="icon-btn ghost" title="Instant Blitz Run" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px; fill:currentColor;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></button>
+          <button class="icon-btn ghost" title="Study Due" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', false)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px; height:12px;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg></button>
         </div>
       </div>`;
   },
 
-  list: function(d, escape) {
+  small: function(d, esc) {
     return `
-      <div class="deck-card mode-list" onclick="AppEngine.openDeckWorkspace(${d.id}, '${escape(d.name)}')">
-        <div class="list-left">
-          <h4>${d.name}</h4>
-          <span class="list-desc">— ${d.description || 'No directives.'}</span>
-        </div>
-        <div class="deck-meta-row">
-          <span class="due-pill">Due: ${d.due_cards ?? 0}</span>
-          ${this.renderActions(d, escape)}
+      <div class="flat-card mode-small-item" style="padding:6px 12px; font-size:12px; font-weight:600; display:flex; justify-content:space-between; align-items:center;" onclick="AppEngine.openDeckWorkspace(${d.id}, '${esc(d.name)}')">
+        <span>📁 ${d.name}</span>
+        <div class="repo-inline-controls" onclick="event.stopPropagation();" style="gap:2px;">
+          <button class="icon-btn ghost" style="width:20px; height:20px;" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px; height:10px; fill:currentColor;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></button>
         </div>
       </div>`;
   },
 
-  small: function(d, escape) {
+  big: function(d, esc) {
+    // FIXED: Dropped long placeholder fallback string layout to prevent search bar interference
+    const displayDesc = d.description ? esc(d.description) : '';
     return `
-      <div class="deck-card mode-small" onclick="AppEngine.openDeckWorkspace(${d.id}, '${escape(d.name)}')">
-        <h4>${d.name}</h4>
-        <div class="deck-meta-row">
-          <span class="due-pill">Due: ${d.due_cards ?? 0}</span>
-          ${this.renderActions(d, escape)}
+      <div class="flat-card mode-big-item" style="padding:24px;" onclick="AppEngine.openDeckWorkspace(${d.id}, '${esc(d.name)}')">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <h2 style="margin:0; font-size:20px; color:var(--bg-dark);">${d.name}</h2>
+          <div class="repo-inline-controls" onclick="event.stopPropagation();">
+            <button class="btn dynamic-btn success" style="padding:4px 12px; font-size:12px;" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', true)">⚡ Blitz</button>
+            <button class="btn dynamic-btn primary" style="padding:4px 12px; font-size:12px;" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', false)">▶ Study</button>
+          </div>
         </div>
-      </div>`;
-  },
-
-  big: function(d, escape) {
-    return `
-      <div class="deck-card mode-big" onclick="AppEngine.openDeckWorkspace(${d.id}, '${escape(d.name)}')">
-        <div class="big-header">
-          <h4>${d.name}</h4>
-          <span class="due-pill">Due: ${d.due_cards ?? 0}</span>
-        </div>
-        <p class="big-desc">${d.description || 'No operational directives assigned to this structural repository resource.'}</p>
-        <div class="preview-cards-box">
-          <span class="preview-tag">System Workspace Container Data Matrix</span>
-        </div>
-        <div class="deck-meta-row" style="margin-top: 16px;">
-          <span></span>
-          ${this.renderActions(d, escape)}
-        </div>
+        <p style="font-size:13px; color:var(--primary-teal); line-height:1.5;">${displayDesc}</p>
       </div>`;
   },
 

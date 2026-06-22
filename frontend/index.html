@@ -14,9 +14,6 @@
     </div>
 
     <div class="search-anchor-wrapper">
-      <button class="icon-btn search-trigger-target" id="search-nav-btn" title="Search Workspaces" onclick="AppEngine.toggleSearchPanel()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      </button>
       
       <div id="search-utility-rack" class="utility-drawer hidden">
         <svg class="search-inside-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -25,14 +22,9 @@
       </div>
     </div>
 
-    <div class="nav-actions">
-      <button class="icon-btn" title="Decks View" onclick="AppEngine.switchView('decks')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19h16v2H4zm0-4h16v2H4zm0-4h16v2H4zm0-4h16v2H4z"/></svg>
-      </button>
-    </div>
   </nav>
 
-  <main class="workspace-wrapper">
+<main class="workspace-wrapper">
     
     <section id="view-decks" class="view-panel">
       <div class="view-header">
@@ -52,91 +44,149 @@
     </section>
 
     <section id="view-cards" class="view-panel hidden">
-      <div class="view-header" style="flex-direction:column; align-items:stretch; gap:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <button class="btn flat-action" onclick="AppEngine.switchView('decks')">← Repositories</button>
-          <h2 id="active-deck-title">Deck Workspace</h2>
-          <div class="action-cluster">
-            <button class="btn dynamic-btn success" onclick="AppEngine.startStudySession()">▶ Study Due</button>
-            <button class="btn dynamic-btn primary" onclick="document.getElementById('card-modal').classList.remove('hidden')">+ Add Card</button>
-          </div>
+      <div class="view-header">
+        <button class="btn flat-action" onclick="AppEngine.switchView('decks')">← Repositories</button>
+        <h2 id="active-deck-title">Deck Workspace</h2>
+        <div class="action-cluster" style="align-items: center;">
+          <button id="toggle-shuffle-btn" class="icon-btn ghost" title="Toggle Shuffling Mode (Current: Prioritized)" onclick="AppEngine.toggleShuffleEngine()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px;"><line x1="18" y1="4" x2="6" y2="20"></line><polyline points="14 4 20 4 20 10"></polyline><polyline points="4 20 4 14 10 20"></polyline></svg>
+          </button>
+          
+          <select id="blitz-speed-preset" class="flat-select" style="padding: 2px 4px; font-size: 11px; height: 28px;" title="Blitz Pacing Interval">
+            <option value="400">400ms</option>
+            <option value="600">600ms</option>
+            <option value="800" selected>800ms</option>
+            <option value="1200">1.2s</option>
+            <option value="1500">1.5s</option>
+          </select>
+
+          <button id="instant-blitz-btn" class="icon-btn ghost" title="Instant Blitz Fast-Review Run" onclick="AppEngine.startInstantBlitzSession()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px; height:16px; fill: currentColor;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+          </button>
+          
+          <span style="border-left: 1px solid rgba(66,132,117,0.3); height: 20px; margin: 0 4px;"></span>
+          <button class="btn dynamic-btn success" onclick="AppEngine.startStandardStudySession()">▶ Study Due</button>
+          <button class="btn dynamic-btn primary" onclick="AppEngine.openAddCardModal()">+ Add Card</button>
         </div>
       </div>
       <div id="cards-list-workspace" class="list-stack"></div>
     </section>
 
-    <section id="view-study" class="view-panel hidden">
+    <section id="view-study" class="view-panel hidden" style="position: relative;">
       <div class="view-header">
-        <button class="btn flat-action" onclick="AppEngine.switchView('cards')">← Cancel Session</button>
-        <div id="study-progress-indicator" class="meta-label">Remaining: 0</div>
+        <button class="btn flat-action" onclick="AppEngine.exitSessionBackToDeck()">← Cancel Session</button>
+        <div id="study-progress-indicator" class="meta-label" style="font-weight: 700; color: var(--primary-teal);">Remaining: 0</div>
       </div>
 
-      <div class="card-workspace-container">
-        <div class="flat-card-viewport" id="card-viewport" onclick="AppEngine.flipCard()">
+      <div class="card-workspace-container" style="position: relative;">
+        
+<div id="session-complete-overlay" class="session-overlay hidden">
+  <div class="overlay-card">
+    
+    <button class="btn dynamic-btn primary" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center;" onclick="AppEngine.resetCustomStudySession()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 15px; height: 15px;">
+        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.53.56" />
+      </svg>
+      <span>Study Again</span>
+    </button>
+    
+    <button class="btn flat-action" style="margin-top: 8px;" onclick="AppEngine.exitSessionBackToDeck()">
+      <span>Return to Workspace</span>
+    </button>
+
+  </div>
+</div>
+
+        <div id="warmup-progress-bar" class="warmup-bar hidden"></div>
+
+        <div class="flat-card-viewport standard-flip-layout" id="card-viewport" onclick="AppEngine.flipCard()">
           <div class="card-side front-side" id="card-display-front"></div>
           <div class="card-side back-side hidden-opacity" id="card-display-back"></div>
         </div>
 
         <footer class="metadata-footer">
-          <div class="meta-block"><span>Created:</span> <span id="meta-created">-</span></div>
-          <div class="meta-block"><span>Reviewed:</span> <span id="meta-reviewed">-</span></div>
-          <div class="meta-block"><span>Next Schedule:</span> <span id="meta-due">-</span></div>
+          <div class="meta-block"><span>Weight Rank:</span> <span id="meta-weight">-</span></div>
+          <div class="meta-block"><span>Session State:</span> <span id="meta-state">Active</span></div>
         </footer>
       </div>
 
       <div id="study-rating-controls" class="rating-hub hidden">
-        <button class="btn dynamic-btn danger" onclick="AppEngine.submitReview(0)">Again <kbd>1</kbd></button>
-        <button class="btn dynamic-btn ghost" onclick="AppEngine.submitReview(3)">Hard <kbd>2</kbd></button>
-        <button class="btn dynamic-btn primary" onclick="AppEngine.submitReview(4)">Good <kbd>3</kbd></button>
-        <button class="btn dynamic-btn success" onclick="AppEngine.submitReview(5)">Easy <kbd>4</kbd></button>
+        <button class="btn dynamic-btn danger" onclick="AppEngine.submitReview(1)">Again <kbd>1</kbd></button>
+        <button class="btn dynamic-btn ghost" onclick="AppEngine.submitReview(2)">Hard <kbd>2</kbd></button>
+        <button class="btn dynamic-btn primary" onclick="AppEngine.submitReview(3)">Good <kbd>3</kbd></button>
+        <button class="btn dynamic-btn success" onclick="AppEngine.submitReview(4)">Easy <kbd>4</kbd></button>
       </div>
     </section>
-  </main>
 
-  <div id="deck-modal" class="flat-modal hidden">
+    <div id="app-dialog-modal" class="flat-modal hidden" style="z-index: 999;">
+      <div class="modal-box" style="max-width: 400px; width: 85%; padding: 24px; text-align: center;">
+        <h3 id="app-dialog-title" style="margin: 0 0 8px 0; font-size: 16px;">Notification</h3>
+        <p id="app-dialog-body" style="margin: 0 0 20px 0; font-size: 13px; color: var(--primary-teal); line-height: 1.5;"></p>
+        <div style="display: flex; gap: 8px; justify-content: center;" id="app-dialog-footer">
+          <button class="btn flat-action" style="min-width: 80px;" onclick="AppEngine.closeAppDialog(false)">Cancel</button>
+          <button class="btn dynamic-btn primary" style="min-width: 80px;" id="app-dialog-confirm-btn" onclick="AppEngine.closeAppDialog(true)">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+  
+  
+<div id="deck-modal" class="flat-modal hidden">
     <div class="modal-box">
-      <h3>Initialize Deck</h3>
+      <h3 id="modal-deck-headline">Initialize Deck</h3>
       <input type="text" id="input-deck-name" placeholder="Deck Identifier" />
       <textarea id="input-deck-desc" placeholder="Operational Directives / Description"></textarea>
       <div class="modal-foot">
         <button class="btn flat-action" onclick="AppEngine.closeDeckModal()">Cancel</button>
-        <button class="btn dynamic-btn primary" onclick="AppEngine.commitDeck()">Create</button>
+        <button id="modal-deck-submit-btn" class="btn dynamic-btn primary" onclick="AppEngine.commitDeck()">Create</button>
       </div>
     </div>
   </div>
 
-  <div id="card-modal" class="flat-modal hidden">
-    <div class="modal-box" style="max-width: 500px; width: 90%;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: var(--flat-border); padding-bottom: 8px;">
-        <h3 id="modal-card-headline" style="margin: 0;">Append Flashcard</h3>
-        <div class="modal-mode-toggle" id="modal-mode-tabs">
-          <button class="mode-tab active" id="tab-mode-single" onclick="AppEngine.setCardModalMode('single')">Single</button>
-          <button class="mode-tab" id="tab-mode-bulk" onclick="AppEngine.setCardModalMode('bulk')">Bulk Fast-Load</button>
-        </div>
-      </div>
+<div id="card-modal" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3 id="modal-card-headline">Append Flashcard</h3>
+    
+    <div class="modal-mode-tabs">
+      <button id="tab-mode-single" class="mode-tab active" onclick="BulkImportEngine.setCardModalMode('single')">Single Card</button>
+      <button id="tab-mode-bulk" class="mode-tab" onclick="BulkImportEngine.setCardModalMode('bulk')">Bulk Import</button>
+    </div>
 
-      <div id="modal-form-single">
+    <div id="modal-form-single">
+      <div class="input-group">
+        <label>Front Face Context</label>
         <textarea id="input-card-front" placeholder="Front Face Text (Prompt/Question)"></textarea>
+      </div>
+      <div class="input-group" style="margin-top: 14px;">
+        <label>Back Face Context</label>
         <textarea id="input-card-back" placeholder="Back Face Text (Core Target Answer)"></textarea>
       </div>
+    </div>
 
-      <div id="modal-form-bulk" class="hidden">
-        <div class="bulk-ingest-header" style="margin-bottom: 8px;">
-          <span style="font-size: 11px; color: var(--primary-teal); font-weight: 600;">Format: Front,Back (Separate cards with Enter/Newline)</span>
-          <span id="bulk-counter-badge" class="bulk-counter">0 cards detected</span>
-        </div>
-        <textarea id="bulk-paste-area" style="height: 140px;" placeholder="Example:&#10;Front Side Text,Back Side Text&#10;Another Prompt,Another Answer" oninput="AppEngine.calculateBulkCards()"></textarea>
-      </div>
-
-      <div class="modal-foot" style="margin-top: 16px;">
-        <button class="btn flat-action" onclick="AppEngine.closeCardModal()">Cancel</button>
-        <button class="btn dynamic-btn primary" id="modal-card-submit-btn" onclick="AppEngine.commitCardWindowData()">Save Card</button>
+    <div id="modal-form-bulk" class="hidden">
+      <div class="input-group">
+        <label>Paste Comma-Separated Values (One item per line)</label>
+        <div id="bulk-counter-badge">0 cards detected</div>
+        <textarea id="bulk-paste-area" placeholder="Question 1, Answer 1&#10;Question 2, Answer 2&#10;Question 3, Answer 3"></textarea>
       </div>
     </div>
-  </div>
 
-  <script src="js/api.js"></script>
+    <div class="modal-actions">
+      <button class="flat-action text" onclick="AppEngine.closeCardModal()">Cancel</button>
+      <button id="modal-card-submit-btn" class="flat-action primary" onclick="AppEngine.commitCardWindowData()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+	
+<script src="js/api.js"></script>
+  
+  <script src="js/bulk.js"></script>
+  <script src="js/flashcard.js"></script>	
   <script src="js/viewModes.js"></script>
+  <script src="js/search.js"></script>
+  
   <script src="js/app.js"></script>
 </body>
 </html>
