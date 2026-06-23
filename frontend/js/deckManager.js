@@ -6,7 +6,12 @@ AppEngine.openEditDeckModal = function(id, name, desc, event) {
   if (event) event.stopPropagation();
   this.state.editingDeckId = id;
   
-  document.getElementById('input-deck-name').value = name;
+  const nameInp = document.getElementById('input-deck-name');
+  if (nameInp) {
+    nameInp.value = name;
+    nameInp.classList.remove('validation-error'); // Clear any leftover errors
+  }
+  
   document.getElementById('input-deck-desc').value = desc;
   
   const headline = document.getElementById('modal-deck-headline');
@@ -19,7 +24,11 @@ AppEngine.openEditDeckModal = function(id, name, desc, event) {
 
 AppEngine.closeDeckModal = function() {
   this.state.editingDeckId = null;
-  document.getElementById('input-deck-name').value = '';
+  const nameInp = document.getElementById('input-deck-name');
+  if (nameInp) {
+    nameInp.value = '';
+    nameInp.classList.remove('validation-error');
+  }
   document.getElementById('input-deck-desc').value = '';
   
   const headline = document.getElementById('modal-deck-headline');
@@ -37,7 +46,20 @@ AppEngine.commitDeck = async function() {
 
   const name = nameInp.value.trim();
   const description = descInp ? descInp.value.trim() : '';
-  if (!name) return this.showAppDialog('Validation Error', 'Missing Identifier Title.');
+  
+  // Inline Red-Marking Error Handling
+  if (!name) {
+    nameInp.classList.add('validation-error');
+    nameInp.focus();
+    
+    // Auto-remove the red highlight the moment the user begins typing
+    nameInp.oninput = function() {
+      if (this.value.trim() !== '') {
+        this.classList.remove('validation-error');
+      }
+    };
+    return; 
+  }
 
   try {
     if (window.api) {

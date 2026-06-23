@@ -13,18 +13,28 @@
       <span>🧠 Anki Flashcards</span>
     </div>
 
-    <div class="search-anchor-wrapper">
+    <div class="nav-search-cluster" style="display: flex; align-items: center; gap: 8px; position: relative;">
       
+      <button id="search-toggle-trigger" title="Search Decks (/)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px; height:16px; display:block; pointer-events:none;">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </button>
+
       <div id="search-utility-rack" class="utility-drawer hidden">
-        <svg class="search-inside-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="navbar-search-input" placeholder="Search repositories or card content..." oninput="AppEngine.executeWorkspaceSearch()" />
-        <button class="search-close-x" onclick="AppEngine.toggleSearchPanel()">✕</button>
+        <svg class="search-inside-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input type="text" id="deck-search-input" placeholder="Search Decks or Cards..." autocomplete="off" />
+        <button class="search-close-x" id="search-clear-btn">✕</button>
       </div>
+
     </div>
-
   </nav>
-
-<main class="workspace-wrapper">
+  
+  <main class="workspace-wrapper">
     
     <section id="view-decks" class="view-panel">
       <div class="view-header">
@@ -80,22 +90,19 @@
 
       <div class="card-workspace-container" style="position: relative;">
         
-<div id="session-complete-overlay" class="session-overlay hidden">
-  <div class="overlay-card">
-    
-    <button class="btn dynamic-btn primary" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center;" onclick="AppEngine.resetCustomStudySession()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 15px; height: 15px;">
-        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.53.56" />
-      </svg>
-      <span>Study Again</span>
-    </button>
-    
-    <button class="btn flat-action" style="margin-top: 8px;" onclick="AppEngine.exitSessionBackToDeck()">
-      <span>Return to Workspace</span>
-    </button>
-
-  </div>
-</div>
+        <div id="session-complete-overlay" class="session-overlay hidden">
+          <div class="overlay-card">
+            <button class="btn dynamic-btn primary" style="display: inline-flex; align-items: center; gap: 8px; justify-content: center;" onclick="AppEngine.resetCustomStudySession()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 15px; height: 15px;">
+                <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l.53.56" />
+              </svg>
+              <span>Study Again</span>
+            </button>
+            <button class="btn flat-action" style="margin-top: 8px;" onclick="AppEngine.exitSessionBackToDeck()">
+              <span>Return to Workspace</span>
+            </button>
+          </div>
+        </div>
 
         <div id="warmup-progress-bar" class="warmup-bar hidden"></div>
 
@@ -118,7 +125,7 @@
       </div>
     </section>
 
-    <div id="app-dialog-modal" class="flat-modal hidden" style="z-index: 999;">
+    <div id="app-dialog-modal" class="flat-modal hidden" style="z-index: 2000;">
       <div class="modal-box" style="max-width: 400px; width: 85%; padding: 24px; text-align: center;">
         <h3 id="app-dialog-title" style="margin: 0 0 8px 0; font-size: 16px;">Notification</h3>
         <p id="app-dialog-body" style="margin: 0 0 20px 0; font-size: 13px; color: var(--primary-teal); line-height: 1.5;"></p>
@@ -131,8 +138,7 @@
 
   </main>
   
-  
-<div id="deck-modal" class="flat-modal hidden">
+  <div id="deck-modal" class="flat-modal hidden" style="z-index: 1000;">
     <div class="modal-box">
       <h3 id="modal-deck-headline">Initialize Deck</h3>
       <input type="text" id="input-deck-name" placeholder="Deck Identifier" />
@@ -144,46 +150,43 @@
     </div>
   </div>
 
-<div id="card-modal" class="modal-overlay hidden">
-  <div class="modal-card">
-    <h3 id="modal-card-headline">Append Flashcard</h3>
-    
-    <div class="modal-mode-tabs">
-      <button id="tab-mode-single" class="mode-tab active" onclick="BulkImportEngine.setCardModalMode('single')">Single Card</button>
-      <button id="tab-mode-bulk" class="mode-tab" onclick="BulkImportEngine.setCardModalMode('bulk')">Bulk Import</button>
-    </div>
-
-    <div id="modal-form-single">
-      <div class="input-group">
-        <label>Front Face Context</label>
-        <textarea id="input-card-front" placeholder="Front Face Text (Prompt/Question)"></textarea>
+  <div id="card-modal" class="modal-overlay hidden" style="z-index: 1000;">
+    <div class="modal-card">
+      <h3 id="modal-card-headline">Append Flashcard</h3>
+      
+      <div class="modal-mode-tabs">
+        <button id="tab-mode-single" class="mode-tab active" onclick="BulkImportEngine.setCardModalMode('single')">Single Card</button>
+        <button id="tab-mode-bulk" class="mode-tab" onclick="BulkImportEngine.setCardModalMode('bulk')">Bulk Import</button>
       </div>
-      <div class="input-group" style="margin-top: 14px;">
-        <label>Back Face Context</label>
-        <textarea id="input-card-back" placeholder="Back Face Text (Core Target Answer)"></textarea>
-      </div>
-    </div>
 
-    <div id="modal-form-bulk" class="hidden">
-      <div class="input-group">
-        <label>Paste Comma-Separated Values (One item per line)</label>
-        <div id="bulk-counter-badge">0 cards detected</div>
-        <textarea id="bulk-paste-area" placeholder="Question 1, Answer 1&#10;Question 2, Answer 2&#10;Question 3, Answer 3"></textarea>
+      <div id="modal-form-single">
+        <div class="input-group">
+          <label>Front Face Context</label>
+          <textarea id="input-card-front" placeholder="Front Face Text (Prompt/Question)"></textarea>
+        </div>
+        <div class="input-group" style="margin-top: 14px;">
+          <label>Back Face Context</label>
+          <textarea id="input-card-back" placeholder="Back Face Text (Core Target Answer)"></textarea>
+        </div>
       </div>
-    </div>
 
-    <div class="modal-actions">
-      <button class="flat-action text" onclick="AppEngine.closeCardModal()">Cancel</button>
-      <button id="modal-card-submit-btn" class="flat-action primary" onclick="AppEngine.commitCardWindowData()">Save Card</button>
+      <div id="modal-form-bulk" class="hidden">
+        <div class="input-group">
+          <label>Paste Comma-Separated Values (One item per line)</label>
+          <div id="bulk-counter-badge">0 cards detected</div>
+          <textarea id="bulk-paste-area" placeholder="Question 1, Answer 1&#10;Question 2, Answer 2&#10;Question 3, Answer 3"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="flat-action text" onclick="AppEngine.closeCardModal()">Cancel</button>
+        <button id="modal-card-submit-btn" class="flat-action primary" onclick="AppEngine.commitCardWindowData()">Save Card</button>
+      </div>
     </div>
   </div>
-</div>
 
-	
-<script src="js/api.js"></script>
-  
+  <script src="js/api.js"></script>
   <script src="js/app.js"></script>
-
   <script src="js/uiController.js"></script>
   <script src="js/deckManager.js"></script>
   <script src="js/cardManager.js"></script>
