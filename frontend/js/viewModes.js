@@ -1,9 +1,13 @@
 /**
- * Deck Render Strategies for Multiple View Profiles - Icon Variant
+ * File: js/viewModes.js
+ * Purpose: Deck render strategies — blocks, tiles, list, small, big layouts
+ * Namespace: DeckRenderModes
+ * Methods: blocks, tiles, list, small, big, renderActions, escape
+ * Works With: AppEngine.renderDecksView, DOM (decks-grid)
+ * Notes: Each mode returns HTML string. 'small' uses folder SVG icon. Inline styles for layout.
  */
-/**
- * Deck Render Strategies for Multiple View Profiles - Icon Variant
- */
+ 
+ 
 const DeckRenderModes = {
   escape: (str) => (str || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;'),
 
@@ -71,7 +75,10 @@ const DeckRenderModes = {
   small: function(d, esc) {
     return `
       <div class="flat-card mode-small-item" style="padding:6px 12px; font-size:12px; font-weight:600; display:flex; justify-content:space-between; align-items:center;" onclick="AppEngine.openDeckWorkspace(${d.id}, '${esc(d.name)}')">
-        <span>📁 ${d.name}</span>
+        <span style="display:inline-flex; align-items:center; gap:6px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+          ${d.name}
+        </span>
         <div class="repo-inline-controls" onclick="event.stopPropagation();" style="gap:2px;">
           <button class="icon-btn ghost" style="width:20px; height:20px;" onclick="AppEngine.triggerDirectDeckSession(${d.id}, '${esc(d.name)}', true)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px; height:10px; fill:currentColor;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg></button>
         </div>

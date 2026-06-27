@@ -1,6 +1,15 @@
 /**
- * Phase 2 - Core Infrastructure & Orchestration Engine
+ * File: js/app.js
+ * Purpose: Core application engine — state, init, routing, session management
+ * Namespace: AppEngine
+ * Methods: init, syncDecksFromStorage, syncCardsFromStorage, startStandardStudySession,
+ *          startInstantBlitzSession, startShuffledStudySession, exitSessionBackToDeck,
+ *          resetCustomStudySession, flipCard, submitReview, bindGlobalKeyboardShortcuts
+ * Works With: api.js, FlashcardEngine, DOM (views: decks/cards/study)
+ * Notes: Central state object holds decks, cards, studyQueue, activeDeckId, etc.
  */
+ 
+ 
 const AppEngine = {
   state: {
     decks: [],
@@ -13,7 +22,7 @@ const AppEngine = {
     editingCardId: null,
     currentLayoutMode: 'blocks',
     
-    shuffleEngineMode: 'prioritized', 
+    
     isBlitzActiveMode: false,
     warmupTimerRef: null,
     
@@ -55,37 +64,6 @@ const AppEngine = {
     } catch (e) { console.error("Card sync error", e); }
   },
 
-  toggleShuffleEngine: function() {
-    const btn = document.getElementById('toggle-shuffle-btn');
-    if (this.state.shuffleEngineMode === 'prioritized') {
-      this.state.shuffleEngineMode = 'random';
-      if (btn) {
-        btn.classList.add('engine-active');
-        btn.title = "Toggle Shuffling Mode (Current: True Random)";
-      }
-      if (!document.getElementById('view-study').classList.contains('hidden') && this.state.studyQueue.length > 0) {
-        let remaining = this.state.studyQueue.slice(this.state.currentSessionIndex);
-        for (let i = remaining.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
-        }
-        this.state.studyQueue = this.state.studyQueue.slice(0, this.state.currentSessionIndex).concat(remaining);
-        FlashcardEngine.loadNextStudyItem();
-      }
-    } else {
-      this.state.shuffleEngineMode = 'prioritized';
-      if (btn) {
-        btn.classList.remove('engine-active');
-        btn.title = "Toggle Shuffling Mode (Current: Prioritized)";
-      }
-      if (!document.getElementById('view-study').classList.contains('hidden') && this.state.studyQueue.length > 0) {
-        let remaining = this.state.studyQueue.slice(this.state.currentSessionIndex);
-        remaining.sort((a, b) => (b.weight || 10) - (a.weight || 10));
-        this.state.studyQueue = this.state.studyQueue.slice(0, this.state.currentSessionIndex).concat(remaining);
-        FlashcardEngine.loadNextStudyItem();
-      }
-    }
-  },
 
   triggerDirectDeckSession: async function(deckId, deckTitle, invokeBlitzMode = false) {
     this.state.activeDeckId = deckId;

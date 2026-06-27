@@ -14,7 +14,6 @@ def get_cards(deck_id):
 @card_bp.route("/deck/<int:deck_id>/study", methods=["GET"])
 def get_due_cards(deck_id):
     Deck.query.get_or_404(deck_id)
-    # Order cards by due date ascending so you study the oldest due items first
     cards = Card.query.filter_by(deck_id=deck_id).order_by(Card.due_date.asc()).all()
     due = [c.to_dict() for c in cards if c.is_due()]
     return jsonify(due)
@@ -26,7 +25,13 @@ def create_card(deck_id):
     if not data.get("front") or not data.get("back"):
         return jsonify({"error": "Front and back are required"}), 400
 
-    card = Card(deck_id=deck_id, front=data["front"], back=data["back"])
+    card = Card(
+        deck_id=deck_id,
+        front=data["front"],
+        back=data["back"],
+        isFavorite=data.get("isFavorite", False),
+        weight=data.get("weight", 10)
+    )
     db.session.add(card)
     db.session.commit()
     return jsonify(card.to_dict()), 201
@@ -36,9 +41,10 @@ def update_card(card_id):
     card = Card.query.get_or_404(card_id)
     data = request.get_json() or {}
     
-    # Strict key checks to support flexible fallback values
     card.front = data.get("front", card.front)
     card.back = data.get("back", card.back)
+    card.isFavorite = data.get("isFavorite", card.isFavorite)
+    card.weight = data.get("weight", card.weight)
     
     db.session.commit()
     return jsonify(card.to_dict())

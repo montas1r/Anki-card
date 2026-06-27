@@ -1,5 +1,11 @@
 /**
- * Module: Deck Workspace Repository Controller
+ * File: js/deckManager.js
+ * Purpose: Deck CRUD + workspace opener + view rendering
+ * Namespace: AppEngine
+ * Methods: openEditDeckModal, closeDeckModal, commitDeck, openDeckWorkspace,
+ *          removeDeck, renderDecksView
+ * Works With: api.js, AppEngine.state.decks, DOM (deck-modal, decks-grid)
+ * Notes: commitDeck uses delete+create instead of PUT (deck ID changes on edit).
  */
 
 AppEngine.openEditDeckModal = function(id, name, desc, event) {
@@ -64,8 +70,7 @@ AppEngine.commitDeck = async function() {
   try {
     if (window.api) {
       if (this.state.editingDeckId) {
-        await window.api.deleteDeck(this.state.editingDeckId);
-        await window.api.createDeck({ name, description });
+                await window.api.updateDeck(this.state.editingDeckId, { name, description });
         this.state.editingDeckId = null;
       } else {
         await window.api.createDeck({ name, description });

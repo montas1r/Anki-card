@@ -1,0 +1,80 @@
+/* File: animations.css
+   Holds: Keyframes, Micro-animations, Transitions, Progress Bars, and Active Workspace Transition States
+*/
+
+/* Engine Progress */
+.warmup-bar { 
+  position: absolute; 
+  top: 0; 
+  left: 2px; 
+  right: 2px; 
+  height: 4px; 
+  background: var(--accent-mint); 
+  border-radius: 4px 4px 0 0; 
+  transform-origin: left; 
+  z-index: 5; 
+}
+
+.warmup-animate { 
+  animation: warmupLinearProgress 800ms linear forwards; 
+}
+
+/* Transitions & Micro Animations */
+#anki-card-workspace { 
+  opacity: 1; 
+  transform: translateY(0) scale(1); 
+  transition: opacity 0.25s ease-out, transform 0.25s ease-out; 
+  will-change: opacity, transform; 
+}
+
+#anki-card-workspace.card-transitioning { 
+  opacity: 0; 
+  transform: translateY(4px) scale(0.99); 
+}
+
+.dynamic-btn { 
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px; 
+  vertical-align: middle; 
+}
+
+.card-animate-out { 
+  animation: cardSlideOut 120ms cubic-bezier(0.4, 0, 1, 1) forwards; 
+}
+
+.card-animate-in { 
+  animation: cardSlideIn 150ms cubic-bezier(0, 0, 0.2, 1) forwards; 
+}
+
+/* Keyframes Definitions */
+@keyframes viewFadeIn { 
+  from { opacity: 0; transform: translateY(2px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+@keyframes searchPopOpen { 
+  from { opacity: 0; transform: scale(0.92); width: 40px; } 
+  to { opacity: 1; transform: scale(1); width: 280px; } 
+}
+
+@keyframes warmupLinearProgress { 
+  from { transform: scaleX(0); } 
+  to { transform: scaleX(1); } 
+}
+
+@keyframes fadeInWrap { 
+  from { opacity: 0; transform: scale(0.97); } 
+  to { opacity: 1; transform: scale(1); } 
+}
+
+@keyframes cardSlideOut { 
+  from { opacity: 1; transform: translateY(0) scale(1); } 
+  to { opacity: 0; transform: translateY(-8px) scale(0.98); } 
+}
+
+@keyframes cardSlideIn { 
+  from { opacity: 0; transform: translateY(8px) scale(0.98); } 
+  to { opacity: 1; transform: translateY(0) scale(1); } 
+}

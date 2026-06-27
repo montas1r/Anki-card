@@ -1,0 +1,29 @@
+/* File: variables.css
+   Holds: Design Tokens, CSS Custom Properties (Variables), Global Reset (*), and Base Body Styling
+*/
+
+:root {
+  --bg-dark: #1A312C;
+  --primary-teal: #428475;
+  --accent-mint: #89D7B7;
+  --text-cream: #FFF4E1;
+  --surface-white: #FFFFFF;
+  --flat-border: 1px solid rgba(62, 132, 117, 0.25);
+  --error-crimson: #C0584F;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--text-cream);
+  color: var(--bg-dark);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}

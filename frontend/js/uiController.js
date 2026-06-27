@@ -1,5 +1,11 @@
 /**
- * Module: UI Layout & Navigation Controller
+ * File: js/uiController.js
+ * Purpose: UI layout, navigation, modals, dropdowns
+ * Namespace: AppEngine
+ * Methods: switchView, changeLayoutMode, showAppDialog, closeAppDialog,
+ *          toggleIntervalMenu, selectIntervalOption
+ * Works With: AppEngine.state, DOM (view panels, modals, dropdown)
+ * Notes: Escape closes modals/dialogs. Dialog returns Promise for confirm/cancel.
  */
 
 AppEngine.switchView = function(viewTarget) {
@@ -58,3 +64,50 @@ AppEngine.closeAppDialog = function(isConfirmed) {
     this.state.activeDialogResolve = null;
   }
 };
+
+/**
+ * Modern Custom Interval Selector Menu Handlers
+ */
+AppEngine.toggleIntervalMenu = function(event) {
+  if (event) event.stopPropagation();
+  const menu = document.getElementById('custom-dropdown-menu');
+  if (!menu) return;
+  
+  const isVisible = menu.style.display === 'block';
+  menu.style.display = isVisible ? 'none' : 'block';
+};
+
+AppEngine.selectIntervalOption = function(value, label) {
+  // Update UI trigger text label
+  const valLabel = document.getElementById('custom-dropdown-value');
+  if (valLabel) valLabel.innerText = label;
+  
+  // Reset previous selector highlight states cleanly
+  const options = document.querySelectorAll('.dropdown-opt');
+  options.forEach(opt => {
+    opt.style.backgroundColor = 'transparent';
+    opt.style.color = '#334155';
+    opt.style.fontWeight = 'normal';
+  });
+
+  // Highlight current selected element node matching custom layout reference
+  if (window.event && window.event.currentTarget) {
+    const targetElement = window.event.currentTarget;
+    targetElement.style.backgroundColor = '#fef2f2';
+    targetElement.style.color = '#ef4444';
+    targetElement.style.fontWeight = '500';
+  }
+
+  // Update underlying state engine properties directly
+  this.state.blitzInterval = value;
+
+  // Dismiss flyout layout element securely
+  const menu = document.getElementById('custom-dropdown-menu');
+  if (menu) menu.style.display = 'none';
+};
+
+// Auto close dropdown menu wrapper if user clicks outside context bounds
+window.addEventListener('click', () => {
+  const menu = document.getElementById('custom-dropdown-menu');
+  if (menu) menu.style.display = 'none';
+});

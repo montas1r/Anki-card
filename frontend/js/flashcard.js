@@ -1,6 +1,15 @@
 /**
- * Production Study, Flipping, and Flashcard Session Engine Modules
+ * File: js/flashcard.js
+ * Purpose: Study session engine — card flipping, rating, queue management, blitz mode
+ * Namespace: FlashcardEngine
+ * Methods: prepareSessionQueue, checkSessionProgress, renderSessionWrapUp,
+ *          loadNextStudyItem, flipCard, submitReview, executeFirstTouchWarmupLoop,
+ *          killWarmupTimer, bindSessionShortcuts
+ * Works With: AppEngine.state, api.js (reviewCard), DOM (card-viewport, rating controls)
+ * Notes: Space/F flips. 1-4 rates. Blitz mode auto-flips on interval. Warmup progress bar.
  */
+ 
+ 
 const FlashcardEngine = {
   // Shortcut access helper to AppEngine's global state matrix
   get state() {
@@ -51,6 +60,9 @@ const FlashcardEngine = {
     if (indicator) {
       indicator.textContent = `Remaining: ${totalRemaining >= 0 ? totalRemaining : 0}`;
     }
+	
+	const divider = document.getElementById('card-display-divider');
+if (divider) divider.classList.add('hidden-opacity');
 
     if (!currentCard) return;
 
@@ -67,15 +79,15 @@ const FlashcardEngine = {
     }
   },
   
-  flipCard: function() {
+flipCard: function() {
     const cardViewport = document.getElementById('card-viewport');
     
-    // ONLY block if the card is physically sliding away out of the screen
     if (cardViewport && cardViewport.classList.contains('card-animate-out')) return;
 
     this.state.isCardFlipped = !this.state.isCardFlipped;
     
     const cardBack = document.getElementById('card-display-back');
+    const divider = document.getElementById('card-display-divider');
     const controls = document.getElementById('study-rating-controls');
 
     if (this.state.isCardFlipped) {
@@ -85,17 +97,21 @@ const FlashcardEngine = {
       }
       if (cardBack) {
         cardBack.classList.remove('hidden-opacity');
-        cardBack.style.opacity = '1'; // Force instant visibility state alignment
+        cardBack.style.opacity = '1';
       }
+      if (divider) divider.classList.remove('hidden-opacity');
       if (controls) controls.classList.remove('hidden');
     } else {
       if (cardBack) {
         cardBack.classList.add('hidden-opacity');
         cardBack.textContent = ''; 
       }
+      if (divider) divider.classList.add('hidden-opacity');
       if (controls) controls.classList.add('hidden');
     }
-  }, 
+  },
+
+
   
   submitReview: async function(scoreSelectionId) {
     if (!this.state.studyQueue || this.state.studyQueue.length === 0) {
@@ -164,15 +180,15 @@ const FlashcardEngine = {
     }, 120);
   },
 
-  executeFirstTouchWarmupLoop: function() {
+executeFirstTouchWarmupLoop: function() {
     this.state.currentSessionIndex = 0;
     document.getElementById('study-rating-controls').classList.add('hidden');
     
     const bar = document.getElementById('warmup-progress-bar');
     if (bar) bar.classList.remove('hidden');
 
-    const speedSelect = document.getElementById('blitz-speed-preset');
-    const tickerIntervalDurationMs = speedSelect ? parseInt(speedSelect.value) : 800;
+    // FIX: Read directly from AppEngine state configuration fallback loop instead of dead selector element 
+    const tickerIntervalDurationMs = this.state.blitzInterval ? parseInt(this.state.blitzInterval) : 800;
 
     const runTicker = async () => {
       if (this.state.currentSessionIndex >= this.state.studyQueue.length) {
@@ -208,7 +224,8 @@ const FlashcardEngine = {
 
     runTicker();
   },
-
+  
+  
   killWarmupTimer: function() {
     if (this.state.warmupTimerRef) {
       clearTimeout(this.state.warmupTimerRef);

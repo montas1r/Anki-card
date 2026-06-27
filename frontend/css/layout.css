@@ -1,0 +1,100 @@
+/* File: layout.css
+   Holds: Utilities, Global Structure, Navigation Bar, Layout Grids, Framework Panels, Wrappers, and Footers
+*/
+
+/* Utilities */
+.hidden, 
+.hidden-opacity { 
+  display: none !important; 
+}
+
+.hidden-opacity { 
+  opacity: 0 !important; 
+  pointer-events: none !important; 
+}
+
+/* Layout Shell */
+.slim-navbar {
+  background-color: var(--bg-dark);
+  color: var(--text-cream);
+  height: 44px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--primary-teal);
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  right: 0;
+  z-index: 999;
+  box-shadow: 0 2px 8px rgba(26, 49, 44, 0.15);
+}
+
+.workspace-wrapper {
+  flex: 1;
+  max-width: 800px;
+  width: 100%;
+  margin: 44px auto 0;
+  padding: 24px 16px;
+}
+
+/* Layout Grids & Cards */
+.flat-grid { 
+  display: grid; 
+  gap: 12px; 
+  margin-top: 16px; 
+  width: 100%; 
+}
+
+.flat-grid.dynamic-layout-blocks { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.flat-grid.dynamic-layout-tiles  { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.flat-grid.dynamic-layout-small  { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.flat-grid.dynamic-layout-list, 
+.flat-grid.dynamic-layout-big    { grid-template-columns: 1fr; }
+
+/* Workspace Framework Layouts */
+.view-panel { 
+  animation: viewFadeIn 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+.view-header { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  margin-bottom: 20px; 
+  padding-bottom: 10px; 
+  border-bottom: var(--flat-border); 
+}
+
+.view-header h2 { 
+  font-size: 18px; 
+  font-weight: 600; 
+}
+
+.card-workspace-container { 
+  max-width: 540px; 
+  margin: 40px auto 24px; 
+  width: 100%; 
+}
+
+.split-review-layout, 
+.standard-flip-layout { 
+  display: flex !important; 
+  flex-direction: column !important; 
+  min-height: 280px; 
+  cursor: pointer; 
+  padding: 24px !important; 
+}
+
+.split-review-layout { 
+  align-items: stretch !important; 
+  justify-content: space-between !important; 
+}
+
+.standard-flip-layout { 
+  align-items: center !important; 
+  justify-content: center !important; 
+  position: relative; 
+  padding: 32px !important; 
+}

@@ -1,6 +1,11 @@
 /**
- * Core API Layer Integration
- * Explicitly bound to window scope to prevent race conditions
+ * File: js/api.js
+ * Purpose: Backend API client — all HTTP fetch calls to Flask backend
+ * Namespace: window.api
+ * Methods: getDecks, createDeck, deleteDeck, getCards, getDueCards, 
+ *          createCard, updateCard, reviewCard, deleteCard
+ * Works With: Backend Flask API (/api/decks/*, /api/cards/*)
+ * Notes: API_BASE = "/api". All methods async/await. Throws on non-ok status.
  */
 
 const API_BASE = "/api";
@@ -20,6 +25,16 @@ window.api = {
       body: JSON.stringify(deckData)
     });
     if (!res.ok) throw new Error("Failed to create deck");
+    return res.json();
+  },
+  
+    updateDeck: async function(deckId, deckData) {
+    const res = await fetch(`${API_BASE}/decks/${deckId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(deckData)
+    });
+    if (!res.ok) throw new Error("Failed to update deck");
     return res.json();
   },
 

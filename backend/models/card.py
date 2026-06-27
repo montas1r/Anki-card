@@ -12,7 +12,8 @@ class Card(db.Model):
     repetitions = db.Column(db.Integer, default=0)
     due_date = db.Column(db.DateTime, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+    isFavorite = db.Column(db.Boolean, default=False)
+    weight = db.Column(db.Integer, default=10)
 
     def is_due(self):
         return self.due_date <= datetime.utcnow()
@@ -29,4 +30,6 @@ class Card(db.Model):
             "due_date": self.due_date.isoformat(),
             "created_at": self.created_at.isoformat(),
             "is_due": self.is_due(),
+            "isFavorite": self.isFavorite,
+            "weight": self.weight,
         }

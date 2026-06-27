@@ -1,6 +1,13 @@
 /**
- * Production Flashcard Bulk Import Processing Engine
+ * File: js/bulk.js
+ * Purpose: Bulk CSV import — paste "front,back" pairs to create multiple cards
+ * Namespace: window.BulkImportEngine
+ * Methods: setCardModalMode, getParsedBulkItems, calculateBulkCards, processBulkPaste, initListeners
+ * Works With: AppEngine (openAddCardModal, syncCardsFromStorage), DOM (bulk-paste-area)
+ * Notes: Parses comma-separated lines. Real-time card counter badge.
  */
+ 
+ 
 window.BulkImportEngine = {
   get state() {
     return AppEngine.state;
